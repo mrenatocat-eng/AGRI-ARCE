@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Tiempo Trabajado PWA</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
+    body { margin: 0; min-height: 100vh; background: #eef2f3; display: flex; justify-content: center; align-items: center; padding: 25px; }
+    .contenedor { width: 100%; max-width: 700px; background: #fff; border-radius: 18px; box-shadow: 0 12px 35px rgba(0,0,0,0.14); overflow: hidden; }
+    .cabecera { background: #1f3b57; color: white; padding: 28px; text-align: center; }
+    .cabecera h1 { margin: 0; font-size: 28px; }
+    .contenido { padding: 30px; }
+    .bloque { margin-bottom: 20px; }
+    label { display: block; font-weight: bold; margin-bottom: 8px; }
+    input { width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: 1.5px solid #ccd6dd; outline: none; }
+    .inputs-hm { display: flex; gap: 12px; }
+    .inputs-hm input { flex: 1; }
+    .botones { display: flex; gap: 12px; margin-top: 20px; }
+    button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    .calcular { background: #1f3b57; color: white; }
+    .calcular:hover { background: #162b40; }
+    .limpiar { background: #e5e7eb; color: #1f2933; }
+    .limpiar:hover { background: #d1d5db; }
+    .resultado { margin-top: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .tarjeta { background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; text-align: center; }
+    .tarjeta h3 { margin: 0 0 8px; font-size: 14px; }
+    .tarjeta .valor { font-size: 24px; font-weight: bold; }
+    .total { grid-column: 1 / -1; background: #eaf4ff; border-color: #b9dcff; }
+    .total .valor { font-size: 32px; color: #0b3b66; }
+    .error { display: none; margin-top: 18px; padding: 14px; border-radius: 10px; background: #fff1f2; color: #9f1239; border: 1px solid #fecdd3; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <main class="contenedor">
+    <section class="cabecera">
+      <h1>Calculadora de Pago por Tiempo Trabajado</h1>
+      <p>Ingresa las horas y minutos por separado y el precio por hora.</p>
+    </section>
+
+    <section class="contenido">
+      <div class="bloque">
+        <label>Tiempo trabajado</label>
+        <div class="inputs-hm">
+          <input id="horas" type="number" min="0" placeholder="Horas">
+          <input id="minutos" type="number" min="0" max="59" placeholder="Minutos">
+        </div>
+      </div>
+
+      <div class="bloque">
+        <label>Precio por hora trabajada</label>
+        <input id="precio" type="number" step="0.01" min="0" placeholder="Ejemplo: 15">
+      </div>
+
+      <div class="botones">
+        <button class="calcular" onclick="calcular()">Calcular pago</button>
+        <button class="limpiar" onclick="limpiar()">Limpiar</button>
+      </div>
+
+      <div id="error" class="error"></div>
+
+      <div class="resultado">
+        <div class="tarjeta">
+          <h3>Tiempo interpretado</h3>
+          <div id="tiempoTexto" class="valor">0 h 00 min</div>
+        </div>
+
+        <div class="tarjeta">
+          <h3>Horas decimales reales</h3>
+          <div id="horasDecimales" class="valor">0.0000</div>
+        </div>
+
+        <div class="tarjeta total">
+          <h3>Total a cobrar</h3>
+          <div id="total" class="valor">S/ 0.00</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('Service Worker registrado'))
+        .catch(err => console.log('Error Service Worker:', err));
+    }
+
+    function calcular() {
+      const horas = parseInt(document.getElementById("horas").value) || 0;
+      const minutos = parseInt(document.getElementById("minutos").value) || 0;
+      const precio = parseFloat(document.getElementById("precio").value);
+
+      const errorDiv = document.getElementById("error");
+      errorDiv.style.display = "none";
+      errorDiv.textContent = "";
+
+      if (minutos < 0 || minutos > 59) {
+        errorDiv.textContent = "Los minutos deben estar entre 0 y 59.";
+        errorDiv.style.display = "block";
+        return;
+      }
+      if (isNaN(precio) || precio < 0) {
+        errorDiv.textContent = "Debes ingresar un precio por hora válido.";
+        errorDiv.style.display = "block";
+        return;
+      }
+
+      const horasDecimales = horas + minutos/60;
+      const total = horasDecimales * precio;
+
+      document.getElementById("tiempoTexto").textContent = horas + " h " + String(minutos).padStart(2,"0") + " min";
+      document.getElementById("horasDecimales").textContent = horasDecimales.toFixed(4);
+      document.getElementById("total").textContent = "S/ " + total.toFixed(2);
+    }
+
+    function limpiar() {
+      document.getElementById("horas").value = "";
+      document.getElementById("minutos").value = "";
+      document.getElementById("precio").value = "";
+      document.getElementById("tiempoTexto").textContent = "0 h 00 min";
+      document.getElementById("horasDecimales").textContent = "0.0000";
+      document.getElementById("total").textContent = "S/ 0.00";
+      document.getElementById("error").style.display = "none";
+    }
+  </script>
+</body>
+</html>
